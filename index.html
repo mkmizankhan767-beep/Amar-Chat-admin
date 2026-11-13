@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#e65100">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>AmarChat - Admin Pro</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Arial,sans-serif}
+:root{--orange:#ff6d00;--orange2:#e65100;--bg:#f0f2f5;--card:#fff;--text:#111}
+body{background:var(--bg);height:100vh;display:flex;flex-direction:column;overflow:hidden;width:100%}
+#splash{position:fixed;inset:0;z-index:9999;background:linear-gradient(135deg,#ff6d00,#e65100,#ffab00);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s,visibility .6s}
+#splash.hide{opacity:0;visibility:hidden}
+.splash-logo{width:150px;height:150px;background:white;border-radius:35px;display:flex;align-items:center;justify-content:center;box-shadow:0 20px 40px rgba(0,0,0,.3);animation:pop .6s}
+@keyframes pop{0%{transform:scale(.7)}100%{transform:scale(1)}}
+.splash-name{color:white;font-size:32px;font-weight:900;margin-top:18px;letter-spacing:1px;text-shadow:0 2px 10px rgba(0,0,0,.2)}
+.splash-sub{color:rgba(255,255,255,.9);font-size:14px;margin-top:4px}
+.splash-loader{width:160px;height:6px;background:rgba(255,255,255,.3);border-radius:10px;margin-top:22px;overflow:hidden}
+.splash-loader div{height:100%;width:40%;background:white;border-radius:10px;animation:load 1.1s infinite}
+@keyframes load{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+#top{background:linear-gradient(90deg,#ff6d00,#e65100);color:white;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 15px rgba(230,81,0,.3);position:relative;z-index:10}
+#top b{font-size:19px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+#top b span{background:white;color:#e65100;font-size:11px;padding:3px 8px;border-radius:20px;font-weight:800}
+#topBtns{display:flex;gap:6px}
+#topBtns button{background:rgba(255,255,255,.22);color:white;border:none;width:38px;height:38px;border-radius:50%;font-size:19px;backdrop-filter:blur(5px)}
+#stats{display:flex;gap:8px;padding:10px;background:white;margin:10px;border-radius:16px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.stat{flex:1;text-align:center;padding:8px 4px;border-radius:12px;background:#fff3e0}
+.stat b{display:block;font-size:18px;color:#e65100}
+.stat span{font-size:11px;color:#666}
+.stat.green{background:#e8f5e9}.stat.green b{color:#2e7d32}
+.stat.red{background:#ffebee}.stat.red b{color:#c62828}
+#main{display:flex;flex:1;overflow:hidden;min-height:0;width:100%}
+#userList{width:100%;max-width:380px;background:white;overflow-y:auto;border-right:1px solid #eee;display:flex;flex-direction:column;flex-shrink:0}
+#userList h3{padding:12px 12px 4px;background:white;color:#111;font-size:16px}
+.userItem{display:flex;gap:12px;padding:11px 12px;border-bottom:1px solid #f5f5f5;cursor:pointer;align-items:center;transition:.2s;border-radius:12px;margin:2px 8px}
+.userItem:hover{background:#fff3e0}
+.userItem.active{background:#ffe0b2;box-shadow:0 2px 8px rgba(255,109,0,.15)}
+.userItem.blocked{opacity:.6;background:#ffebee}
+.userItem .avatar{position:relative;flex-shrink:0}
+.userItem img{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#eee;border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.1)}
+.userItem .dot{position:absolute;bottom:2px;right:2px;width:13px;height:13px;background:#25d366;border:2px solid white;border-radius:50%}
+.userItem .info{flex:1;overflow:hidden;min-width:0}
+.userItem .info b{display:block;font-size:15px}
+.userItem .info span{font-size:12px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;margin-top:2px}
+#chatArea{flex:1;display:none;flex-direction:column;background:#ece5dd;background-image:radial-gradient(#d5c9b8 1px,transparent 1px);background-size:18px 18px;min-height:0;width:100%;overflow:hidden}
+#chatHead{background:linear-gradient(90deg,#e65100,#ff6d00);color:white;padding:9px 10px;display:flex;gap:8px;align-items:center;box-shadow:0 2px 10px rgba(0,0,0,.15)}
+#chatHead img{width:40px;height:40px;border-radius:50%;object-fit:cover;border:2px solid white}
+#chatHead .callBtns{margin-left:auto;display:flex;gap:5px}
+#chatHead .callBtns button{width:36px;height:36px;border-radius:50%;border:none;font-size:16px;cursor:pointer;color:white;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+#backBtn{display:none;background:rgba(255,255,255,.25);color:white;border:none;width:36px;height:36px;border-radius:50%;font-size:18px}
+#msgs{flex:1;overflow-y:auto;padding:14px 10px;width:100%;display:block}
+.msg{display:block;width:fit-content;max-width:80%;padding:10px 13px;border-radius:16px;font-size:15px;line-height:1.45;word-break:break-word;white-space:pre-wrap;position:relative;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.08);animation:msgIn .25s}
+@keyframes msgIn{0%{opacity:0;transform:translateY(8px)}100%{opacity:1;transform:translateY(0)}}
+.me{background:linear-gradient(135deg,#ffcc80,#ffe0b2);margin-left:auto;border-bottom-right-radius:4px}.other{background:white;margin-right:auto;border-bottom-left-radius:4px}
+.msg img{max-width:100%;border-radius:12px;margin-top:5px;display:block}
+.msg audio{width:100%;margin-top:5px;max-width:230px}
+#bar{display:flex;padding:9px;background:white;gap:6px;align-items:center;box-shadow:0 -2px 10px rgba(0,0,0,.05)}
+#bar input{flex:1;padding:12px 16px;border-radius:25px;border:1px solid #eee;background:#f5f5f5;outline:none;min-width:0;font-size:15px}
+#bar input:focus{background:white;border-color:#ff9800}
+#bar button{border:none;color:white;width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;box-shadow:0 3px 8px rgba(0,0,0,.15)}
+#imgBtn{background:linear-gradient(135deg,#ff9800,#ff6d00)}#voiceBtn{background:linear-gradient(135deg,#9c27b0,#673ab7)}#sendBtn{background:linear-gradient(135deg,#e65100,#ff6d00)}
+#empty{flex:1;display:flex;align-items:center;justify-content:center;color:#999;font-size:16px;text-align:center;padding:20px;line-height:1.6}
+#callScreen{position:fixed;inset:0;background:#111;z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;color:white}
+#remoteVideo{width:100%;height:45vh;object-fit:cover;background:#000}
+#localVideo{width:120px;height:160px;position:absolute;top:15px;right:15px;border:2px solid white;border-radius:12px;object-fit:cover}
+#callControls{display:flex;gap:15px;margin-top:20px}
+#callControls button{width:60px;height:60px;border-radius:50%;border:none;font-size:24px}
+#incomingCall{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:white;color:black;padding:20px;border-radius:20px;z-index:1001;display:none;text-align:center;box-shadow:0 15px 35px rgba(0,0,0,.3);width:90%;max-width:350px;animation:pop .3s}
+#incomingCall button{padding:11px 18px;border:none;border-radius:20px;margin:8px 5px 0;font-size:15px}
+#adminLogin{position:fixed;inset:0;background:linear-gradient(180deg,#fff3e0,#ffe0b2);z-index:1002;display:none;align-items:center;justify-content:center;padding:20px}
+#adminLogin .box{background:white;padding:28px;border-radius:22px;width:100%;max-width:350px;text-align:center;box-shadow:0 15px 35px rgba(0,0,0,.12)}
+#adminLogin input{width:100%;padding:14px;margin:8px 0;border:1px solid #eee;border-radius:12px;background:#f9f9f9;font-size:15px}
+#adminLogin button{width:100%;padding:14px;background:linear-gradient(90deg,#ff6d00,#e65100);color:white;border:none;border-radius:12px;font-size:16px;cursor:pointer;font-weight:bold}
+@media(max-width:700px){
+  #userList{max-width:100% !important;flex:1 !important;width:100% !important;border-right:none}
+  #userList.hideOnMobile{display:none !important}
+  #chatArea{width:100% !important}
+  #chatArea.showOnMobile{display:flex !important}
+  #backBtn{display:block}
+  #empty{display:none !important}
+  #main{flex-direction:column}
+  #stats{margin:8px}
+}
+#msgMenu{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2000;display:none;align-items:flex-end;justify-content:center}
+#msgMenu .menuBox{background:white;width:100%;max-width:400px;border-radius:22px 22px 0 0;padding:10px 10px 20px}
+#msgMenu .menuBox button{width:100%;padding:14px;border:none;background:none;font-size:16px;text-align:left;border-bottom:1px solid #f5f5f5}
+#editBox{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2001;display:none;align-items:center;justify-content:center;padding:20px}
+#editBox .box2{background:white;width:100%;max-width:340px;padding:20px;border-radius:18px}
+#editBox input{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:10px 0}
+#editBox button{width:100%;padding:12px;border:none;border-radius:10px;margin-top:6px}
+.msg .quote{background:rgba(0,0,0,.07);border-left:3px solid #e65100;padding:6px 8px;border-radius:8px;font-size:12px;margin-bottom:6px}
+#replyBar{display:none;background:#fff3e0;border-left:4px solid #e65100;padding:8px 12px;align-items:center;gap:10px}
+#replyBar .rText{flex:1;overflow:hidden}
+#replyBar button{background:none;border:none;font-size:20px}
+#imgViewer{position:fixed;inset:0;background:rgba(0,0,0,.95);z-index:3000;display:none;flex-direction:column;align-items:center;justify-content:center;padding:15px}
+#imgViewer img{max-width:100%;max-height:75vh;border-radius:12px}
+#imgViewer .vBtns{display:flex;gap:12px;margin-top:18px}
+#imgViewer .vBtns button{padding:13px 22px;border:none;border-radius:25px;font-size:16px}
+.msg .ticks{font-size:11px;margin-left:5px}
+.msg .ticks.seen{color:#53bdeb;font-weight:bold}
+.msg .react{position:absolute;bottom:-10px;right:8px;background:white;border-radius:15px;padding:2px 6px;font-size:14px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+#reactRow{display:flex;gap:4px;justify-content:center;padding:10px 0;border-bottom:1px solid #eee}
+#reactRow button{font-size:26px !important;width:44px !important;padding:6px !important;text-align:center !important;border:none !important;background:#f5f5f5 !important;border-radius:50% !important}
+body.dark{background:#0b141a !important}
+body.dark #top,body.dark #chatHead{background:#202c33 !important}
+body.dark #userList,body.dark #bar,body.dark #msgMenu .menuBox,body.dark #editBox .box2,body.dark #userMenu .menuBox,body.dark #statusModal .sBox,body.dark #groupModal .gBox,body.dark #forwardBox .fBox,body.dark #moreMenu,body.dark #themeModal .tBox,body.dark #pollModal .pBox,body.dark #starModal .sBox,body.dark #uuModal .uBox,body.dark #reportModal .rBox2,body.dark #stats{background:#233138 !important;color:#e9edef !important}
+body.dark .msg.other{background:#233138 !important;color:#e9edef !important}
+body.dark .msg.me{background:#4a2c00 !important;color:white !important}
+body.dark #msgs,body.dark #groupMsgs{background:#0b141a !important}
+body.dark .stat{background:#2a3942 !important}body.dark .stat span{color:#aaa !important}
+#searchBar{display:none;padding:8px;background:white;gap:6px;align-items:center}
+#searchBar input{flex:1;padding:10px;border-radius:20px;border:1px solid #ddd;outline:none}
+#searchBar button{background:#e65100;color:white;border:none;padding:8px 12px;border-radius:15px}
+#pinBar{display:none;background:#fff3cd;border-left:4px solid #ff9800;padding:8px 12px;align-items:center;gap:10px;cursor:pointer}
+#pinBar .pText{flex:1;overflow:hidden}
+#pinBar button{background:none;border:none;font-size:18px}
+.msg.pinned{border:2px solid #ff9800 !important}
+#statusModal,#groupModal,#starModal,#themeModal,#pollModal,#uuModal,#reportModal,#updateModal,#broadcastModal{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:4000;display:none;align-items:flex-end;justify-content:center}
+#statusModal .sBox,#groupModal .gBox,#starModal .sBox,#themeModal .tBox,#pollModal .pBox,#uuModal .uBox,#reportModal .rBox2,#updateModal .uBox2,#broadcastModal .uBox2{background:white;width:100%;max-width:500px;height:85vh;border-radius:22px 22px 0 0;display:flex;flex-direction:column;overflow:hidden}
+#statusModal .sHead,#groupModal .gHead,#starModal .sHead,#themeModal .tHead,#pollModal .pHead,#uuModal .uHead,#reportModal .rHead,#updateModal .uHead2,#broadcastModal .uHead2{background:linear-gradient(90deg,#e65100,#ff6d00);color:white;padding:14px;display:flex;justify-content:space-between;align-items:center}
+#statusModal .sHead button,#groupModal .gHead button,#starModal .sHead button,#themeModal .tHead button,#pollModal .pHead button,#uuModal .uHead button,#reportModal .rHead button,#updateModal .uHead2 button,#broadcastModal .uHead2 button{background:rgba(255,255,255,.25);color:white;border:none;width:36px;height:36px;border-radius:50%;font-size:18px}
+#statusList,#groupMsgs,#starList,#uuList{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+.statusItem{display:flex;gap:10px;background:#f5f5f5;padding:10px;border-radius:14px;align-items:center}
+.statusItem img{width:48px;height:48px;border-radius:50%;object-fit:cover;border:3px solid #25d366}
+#statusInput,#groupInput{flex:1;padding:12px;border-radius:25px;border:1px solid #ddd;outline:none}
+.sBar,.gBar{display:flex;padding:10px;gap:6px;background:white;border-top:1px solid #eee;align-items:center}
+.sBar button,.gBar button{background:#e65100;color:white;border:none;padding:10px 16px;border-radius:20px}
+#forwardBox{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2003;display:none;align-items:center;justify-content:center;padding:20px}
+#forwardBox .fBox{background:white;width:100%;max-width:340px;padding:20px;border-radius:18px;text-align:center}
+#forwardBox button{width:100%;padding:12px;border:none;border-radius:10px;margin-top:8px}
+#forwardBox select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-top:10px}
+#userMenu{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:2002;display:none;align-items:flex-end;justify-content:center}
+#userMenu .menuBox{background:white;width:100%;max-width:400px;border-radius:18px 18px 0 0;padding:10px 10px 20px}
+#userMenu .menuBox button{width:100%;padding:14px;border:none;background:none;font-size:16px;text-align:left;border-bottom:1px solid #eee}
+#moreMenu{position:fixed;top:62px;right:10px;background:white;z-index:5000;display:none;flex-direction:column;width:280px;max-width:90vw;max-height:calc(100dvh - 80px);overflow-y:auto !important;overflow-x:hidden;-webkit-overflow-scrolling:touch;border-radius:18px;box-shadow:0 15px 35px rgba(0,0,0,.25);padding:8px;padding-bottom:16px}
+#moreMenu::-webkit-scrollbar{width:5px}
+#moreMenu::-webkit-scrollbar-thumb{background:#e65100;border-radius:10px}
+#moreMenu button{width:100%;padding:13px 14px;border:none;background:none;text-align:left;font-size:15px;border-bottom:1px solid #f5f5f5;color:#222;border-radius:10px}
+#moreMenu button:hover{background:#fff3e0}
+#moreMenu button:last-child{border:none;color:red}
+#moreMenu .mTitle{padding:10px 14px;font-weight:800;font-size:12px;color:#e65100;border-bottom:1px solid #eee;position:sticky;top:0;background:white;z-index:1;letter-spacing:.5px}
+#extraBar{display:none;gap:6px;padding:6px 8px;background:#fff3e0;overflow-x:auto;flex-shrink:0;flex-wrap:nowrap}
+#extraBar button{background:white;border:1px solid #ddd;padding:8px 12px;border-radius:20px;white-space:nowrap;font-size:13px}
+.pollBox{background:#fff3e0;border:1px solid #ff9800;border-radius:12px;padding:10px;margin-top:5px}
+.pollBox .opt{background:white;padding:8px;border-radius:8px;margin:5px 0;cursor:pointer;display:flex;justify-content:space-between}
+#userSearch{width:calc(100% - 20px);margin:8px 10px;padding:12px 14px;border:1px solid #eee;border-radius:20px;outline:none;font-size:14px;background:#f5f5f5}
+#userSearch:focus{background:white;border-color:#ff9800}
+.uuItem{background:#f5f5f5;padding:12px;border-radius:12px;cursor:pointer}
+.reportItem{background:#ffebee;padding:12px;border-radius:12px}
+.reportItem button{padding:8px 12px;border:none;border-radius:10px;margin-right:6px;margin-top:8px}
+.quickBtn{flex:1;padding:10px;border:none;border-radius:12px;font-size:13px;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<div id="splash"><div class="splash-logo"><svg viewBox="0 0 200 200" fill="none"><circle cx="60" cy="75" r="32" stroke="#e65100" stroke-width="9"/><path d="M18 155 C18 125 35 110 60 110 C85 110 102 125 102 155" stroke="#e65100" stroke-width="9" stroke-linecap="round"/><circle cx="140" cy="75" r="32" stroke="#e65100" stroke-width="9"/><path d="M98 155 C98 125 115 110 140 110 C165 110 182 125 182 155" stroke="#e65100" stroke-width="9" stroke-linecap="round"/></svg></div><div class="splash-name">AmarChat Admin</div><div class="splash-sub">PRO Version • সব দেখতে পারবা</div><div class="splash-loader"><div></div></div><div id="loadPercent" style="color:white;margin-top:10px;font-weight:bold">Loading... 0%</div></div>
+<div id="incomingCall"><b id="callerName">ইউজার</b><div id="callerType">📹 ভিডিও কল আসছে...</div><br><button style="background:#25d366;color:white" onclick="acceptCall()">✅ ধরো</button><button style="background:#ff3b30;color:white" onclick="rejectCall()">❌ কাটো</button></div>
+<div id="callScreen"><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay playsinline muted></video><div id="callInfo">📞 কথা হচ্ছে...</div><div id="callControls"><button onclick="toggleMute()">🎤</button><button onclick="toggleCam()">📹</button><button style="background:#ff3b30;color:white" onclick="endCall()">📞</button></div></div>
+<div id="adminLogin"><div class="box"><div style="font-size:50px">👑</div><h2 style="margin:6px 0">Admin Login</h2><p style="font-size:13px;color:#666">শুধু মিজানুরের জন্য</p><input id="adminPass" type="password" placeholder="Admin পাসওয়ার্ড - 7424"><button id="adminLoginBtn" type="button" onclick="adminLogin()">Login ✅</button><div id="adminErr" style="color:red;font-size:13px;margin-top:8px;min-height:18px"></div><p style="font-size:12px;color:#999;margin-top:8px">ডিফল্ট পাসওয়ার্ড: 7424</p></div></div>
+<div id="top"><b>👑 AmarChat <span>ADMIN PRO</span></b><div id="topBtns"><button onclick="adminLogout()">⏻</button><button onclick="toggleMore(event)">⋮</button></div></div>
+<div id="moreMenu">
+  <div class="mTitle">💬 চ্যাট</div>
+  <button onclick="openStatus();closeMore()">🟢 স্ট্যাটাস</button>
+  <button onclick="openGroup();closeMore()">👥 গ্রুপ চ্যাট</button>
+  <button onclick="openUUChats();closeMore()">👥 User-User চ্যাট দেখো</button>
+  <button onclick="openReports();closeMore()">🚨 Reports দেখো</button>
+  <button onclick="openStar();closeMore()">⭐ Saved মেসেজ</button>
+  <div class="mTitle">📢 BROADCAST</div>
+  <button onclick="openBroadcast();closeMore()">📢 সবাইকে মেসেজ পাঠাও</button>
+  <button onclick="openUpdate();closeMore()">⬇️ App Update পাঠাও</button>
+  <button onclick="openPoll();closeMore()">📊 Poll বানাও</button>
+  <div class="mTitle">⚙️ সেটিংস</div>
+  <button onclick="openTheme();closeMore()">🎨 Theme / Wallpaper</button>
+  <button id="darkBtn" onclick="toggleDark();closeMore()">🌙 ডার্ক মোড</button>
+  <button onclick="askAI();closeMore()">🤖 AI রিপ্লাই</button>
+  <button onclick="closeMore()">❌ বন্ধ করো</button>
+</div>
+<div id="main">
+  <div id="userList">
+    <div id="stats">
+      <div class="stat"><b id="userCount">0</b><span>👥 মোট ইউজার</span></div>
+      <div class="stat green"><b id="onlineCount">0</b><span>🟢 Online</span></div>
+      <div class="stat red"><b id="blockedCount">0</b><span>🚫 Blocked</span></div>
+    </div>
+    <h3>👥 ইউজাররা</h3>
+    <input id="userSearch" placeholder="🔍 নাম / নাম্বার দিয়ে খুঁজো - 017XXXXXXXX" oninput="filterUsers()">
+    <div style="display:flex;gap:6px;padding:0 10px 8px"><button class="quickBtn" style="background:#e65100;color:white" onclick="openBroadcast()">📢 Broadcast</button><button class="quickBtn" style="background:#25d366;color:white" onclick="openGroup()">👥 গ্রুপ</button><button class="quickBtn" style="background:#ff9800;color:white" onclick="openUpdate()">⬇️ Update</button></div>
+    <div id="list"></div>
+  </div>
+  <div id="chatArea">
+    <div id="chatHead"><button id="backBtn" onclick="goBack()">←</button><img id="chatUserImg" src="https://ui-avatars.com/api/?name=User&background=ff6d00&color=fff"><div style="min-width:0;flex:1"><b id="chatUserName" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">ইউজার</b><div id="chatUserStatus" style="font-size:12px">🟢 Online</div></div><div class="callBtns"><button style="background:#ff9800" onclick="toggleSearch()">🔍</button><button style="background:#673ab7" onclick="toggleExtra()">＋</button><button style="background:#25d366" onclick="startCall(false)">📞</button><button style="background:#2196f3" onclick="startCall(true)">📹</button></div></div>
+    <div id="searchBar"><input id="searchInput" placeholder="মেসেজ খুঁজো..." oninput="doSearch()"><button onclick="toggleSearch()">✕</button></div>
+    <div id="extraBar"><button onclick="sendLocation()">📍 Location</button><button onclick="document.getElementById('fileInput').click()">📁 File</button><button onclick="askAI()">🤖 AI রিপ্লাই</button><button onclick="openPoll()">📊 Poll</button><button onclick="warnCurrentUser()">⚠️ এই ইউজারকে Warn করো</button></div>
+    <div id="pinBar" onclick="scrollToPin()"><div class="pText"><b>📌 Pinned</b><span id="pinText"></span></div><button onclick="event.stopPropagation();unpinMsg()">✕</button></div>
+    <div id="msgs"></div>
+    <div id="replyBar"><div class="rText"><b id="replyToName">Reply</b><span id="replyToText"></span></div><button onclick="cancelReply()">✕</button></div>
+    <div id="bar"><input type="file" id="chatImg" accept="image/*" style="display:none" onchange="sendImage(event)"><input type="file" id="fileInput" style="display:none" onchange="sendFile(event)"><button id="imgBtn" onclick="document.getElementById('chatImg').click()">📷</button><button id="voiceBtn" onclick="toggleVoice()">🎤</button><input id="inp" placeholder="রিপ্লাই লিখো..." oninput="onTyping()"><button id="sendBtn" onclick="send()">➤</button></div>
+  </div>
+  <div id="empty">👈 বাম থেকে একজন ইউজার সিলেক্ট করো</div>
+</div>
+<div id="statusModal"><div class="sBox"><div class="sHead"><b>🟢 স্ট্যাটাস</b><button onclick="closeStatus()">✕</button></div><div id="statusList"></div><div class="sBar"><input id="statusInput" placeholder="তোমার স্ট্যাটাস লিখো..."><button onclick="postStatus()">পোস্ট ✅</button></div></div></div>
+<div id="groupModal"><div class="gBox"><div class="gHead"><b>👥 সবার গ্রুপ</b><div style="display:flex;gap:6px"><button onclick="startGroupCall()">📞</button><button onclick="closeGroup()">✕</button></div></div><div id="groupMsgs"></div><div class="gBar"><input id="groupInput" placeholder="গ্রুপে লিখো..."><button onclick="sendGroup()">➤</button></div></div></div>
+<div id="uuModal"><div class="uBox"><div class="uHead"><b>👥 User-User চ্যাট</b><button onclick="closeUUChats()">✕</button></div><div id="uuList"></div><div id="uuMsgs" style="flex:1;overflow-y:auto;padding:12px;display:none;flex-direction:column;gap:8px;border-top:1px solid #eee"></div><div style="padding:10px;border-top:1px solid #eee"><button onclick="backToUUList()" style="width:100%;padding:10px;background:#eee;border:none;border-radius:10px">← সব চ্যাট দেখো</button></div></div></div>
+<div id="reportModal"><div class="rBox2"><div class="rHead"><b>🚨 Reports</b><button onclick="closeReports()">✕</button></div><div id="reportList" style="flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px"></div></div></div>
+<div id="broadcastModal"><div class="uBox2" style="height:auto"><div class="uHead2"><b>📢 সবাইকে মেসেজ পাঠাও</b><button onclick="closeBroadcast()">✕</button></div><div style="padding:16px"><textarea id="broadcastText" placeholder="সবাইকে কি বলবা? যেমন - নতুন আপডেট আসছে, সবাই অ্যাপ আবার খোলো..." style="width:100%;height:110px;padding:12px;border:1px solid #eee;border-radius:12px;background:#f9f9f9;font-size:15px"></textarea><button onclick="sendBroadcast()" style="width:100%;padding:13px;background:linear-gradient(90deg,#ff6d00,#e65100);color:white;border:none;border-radius:12px;margin-top:10px;font-weight:bold">সবাইকে পাঠাও ✅</button><p style="font-size:12px;color:#666;margin-top:8px;text-align:center">পাঠালেই সব ইউজারের Admin চ্যাটে + গ্রুপে মেসেজ যাবে</p></div></div></div>
+<div id="updateModal"><div class="uBox2" style="height:auto"><div class="uHead2"><b>⬇️ App Update পাঠাও</b><button onclick="closeUpdate()">✕</button></div><div style="padding:15px"><input id="updateVerInput" placeholder="নতুন ভার্সন - যেমন 4" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px"><input id="updateNoteInput" placeholder="কি নতুন দিলে? - নতুন Sticker যোগ হইছে" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px"><button onclick="sendUpdate()" style="width:100%;padding:12px;background:#e65100;color:white;border:none;border-radius:10px">সবাইকে আপডেট পাঠাও ✅</button><p style="font-size:12px;color:#666;margin-top:8px">পাঠালেই সব ইউজারের ফোনে "নতুন আপডেট এসেছে!" পপআপ আসবে</p></div></div></div>
+<div id="starModal"><div class="sBox"><div class="sHead"><b>⭐ Saved</b><button onclick="closeStar()">✕</button></div><div id="starList"></div></div></div>
+<div id="themeModal"><div class="tBox" style="height:auto"><div class="tHead"><b>🎨 Theme</b><button onclick="closeTheme()">✕</button></div><div style="padding:15px"><div style="display:flex;gap:10px"><div style="flex:1;height:80px;background:#ece5dd;border-radius:12px;text-align:center;padding-top:30px" onclick="setWall(1)">🤍 Default</div><div style="flex:1;height:80px;background:#c8e6c9;border-radius:12px;text-align:center;padding-top:30px" onclick="setWall(2)">💚 সবুজ</div></div></div></div></div>
+<div id="pollModal"><div class="pBox" style="height:auto"><div class="pHead"><b>📊 Poll</b><button onclick="closePoll()">✕</button></div><div style="padding:15px"><input id="pollQ" placeholder="প্রশ্ন" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px"><input id="pollOpt1" placeholder="অপশন ১" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px"><input id="pollOpt2" placeholder="অপশন ২" style="width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin-bottom:8px"><button onclick="createPoll()" style="width:100%;padding:12px;background:#e65100;color:white;border:none;border-radius:10px">Poll পাঠাও ✅</button></div></div></div>
+<div id="msgMenu" onclick="if(event.target.id=='msgMenu')closeMsgMenu()"><div class="menuBox"><div id="menuPreview" style="padding:10px;text-align:center;color:#666;border-bottom:1px solid #eee"></div><div id="reactRow"><button onclick="sendReaction('❤️')">❤️</button><button onclick="sendReaction('😂')">😂</button><button onclick="sendReaction('😮')">😮</button><button onclick="sendReaction('😢')">😢</button><button onclick="sendReaction('😡')">😡</button><button onclick="sendReaction('👍')">👍</button></div><button onclick="startReplyMsg()">↩️ Reply</button><button onclick="openForward()">📩 Forward</button><button onclick="starMsg()">⭐ Star</button><button onclick="pinMsg()">📌 Pin</button><button id="editBtn" onclick="startEditMsg()">✏️ Edit</button><button id="deleteBtn" onclick="deleteMsg()">🗑️ Delete</button><button onclick="closeMsgMenu()">❌ বাদ দাও</button></div></div>
+<div id="forwardBox"><div class="fBox"><h3>📩 Forward</h3><p id="forwardPreview" style="font-size:13px;color:#666"></p><button style="background:#e65100;color:white" onclick="doForwardGroup()">👥 গ্রুপে পাঠাও</button><select id="forwardUserSelect"></select><button style="background:#25d366;color:white" onclick="doForwardUser()">💬 ওই ইউজারকে পাঠাও</button><button style="background:#eee" onclick="closeForward()">বাদ দাও</button></div></div>
+<div id="userMenu" onclick="if(event.target.id=='userMenu')closeUserMenu()"><div class="menuBox"><div id="userMenuName" style="padding:12px;text-align:center;font-weight:bold;border-bottom:1px solid #eee"></div><button onclick="openUserFromMenu()">💬 চ্যাট খোলো</button><button id="muteUserBtn" onclick="toggleMuteUser()">🔕 Mute</button><button onclick="warnSelectedUser()">⚠️ Warn করো</button><button id="blockUserBtn" onclick="toggleBlockUser()">🚫 Block</button><button onclick="closeUserMenu()">❌ বাদ দাও</button></div></div>
+<div id="editBox"><div class="box2"><h3>✏️ Edit</h3><input id="editInput"><button style="background:#e65100;color:white" onclick="saveEditMsg()">Save ✅</button><button style="background:#eee" onclick="closeEditBox()">বাদ দাও</button></div></div>
+<div id="imgViewer"><div style="width:100%;display:flex;justify-content:space-between;color:white;margin-bottom:12px"><b>📷 ছবি</b><button onclick="closeImg()" style="background:rgba(255,255,255,.2);color:white;border:none;width:42px;height:42px;border-radius:50%">✕</button></div><img id="viewerImg" src=""><div class="vBtns"><button style="background:#25d366;color:white" onclick="downloadImg()">⬇️ Download</button><button style="background:#333;color:white" onclick="closeImg()">বন্ধ করো</button></div></div>
+<script>
+window.__adminReady=false;
+window.adminLoginFallback=()=>{ let p=document.getElementById('adminPass')?.value||''; let saved=localStorage.getItem('amarAdminPass')||'7424'; if(p===saved){ localStorage.setItem('amarAdminLogged','yes'); let l=document.getElementById('adminLogin'); if(l) l.style.display='none'; location.reload(); } else { let e=document.getElementById('adminErr'); if(e) e.innerText='ভুল পাসওয়ার্ড! ডিফল্ট: 7424'; } };
+</script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, push, onValue, set, get, remove, onChildAdded, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging.js";
+const firebaseConfig={apiKey:"AIzaSyAo7ghgHswqPDlwqAe7qgd0ZXT0TcZMs9o",authDomain:"amarchat-328de.firebaseapp.com",databaseURL:"https://amarchat-328de-default-rtdb.asia-southeast1.firebasedatabase.app",projectId:"amarchat-328de",storageBucket:"amarchat-328de.firebasestorage.app",messagingSenderId:"549501657163",appId:"1:549501657163:web:83d8015892188f7162edce"};
+const app=initializeApp(firebaseConfig);const db=getDatabase(app);const auth=getAuth(app);
+if(localStorage.getItem('amarAdminDark')==='yes'){ document.body.classList.add('dark'); }
+let progress=0;let loadTimer=setInterval(()=>{ progress+=2; if(progress>100) progress=100; let el=document.getElementById('loadPercent'); if(el) el.innerText='Loading... '+progress+'%'; if(progress>=100) clearInterval(loadTimer); },28);
+setTimeout(()=>{ let s=document.getElementById('splash'); if(s) s.classList.add('hide'); if(localStorage.getItem('amarAdminLogged')!=='yes'){ let l=document.getElementById('adminLogin'); if(l) l.style.display='flex'; } },3000);
+try{ await signInAnonymously(auth); }catch(e){}
+let currentUser=null, currentChatId=null, currentUid=null, currentPhone=null, pc=null, localStream=null, isVideoCall=false, incomingOffer=null, incomingChatId=null, isMuted=false, isCamOff=false;
+let mediaRecorder=null, audioChunks=[], isRecording=false;
+let usersData={}; let allMsgs={}; let pinnedKey=null; let selectedUserForMenu=null, selectedUidForMenu=null, selectedPhoneForMenu=null;
+let blockedMap={}; let mutedMap={}; let starredIds=JSON.parse(localStorage.getItem('amarAdminStar')||'[]');
+let allUsersArr=[];
+function cleanPhone(p){ p=(p||'').replace(/[^0-9]/g,''); if(p.startsWith('880')) p=p.slice(3); if(p.startsWith('88') && p.length===13) p=p.slice(2); if(p.length===10) p='0'+p; return p; }
+function makeUID(phone){ return 'u_'+cleanPhone(phone); }
+function getAdminChatId(name, phone){ if(phone && /^01[3-9]\d{8}$/.test(cleanPhone(phone))) return 'admin_'+makeUID(phone); return 'admin_u_'+name.toLowerCase().replace(/[^a-z0-9]/g,'_'); }
+window.adminLogin=()=>{ let p=document.getElementById('adminPass')?.value||''; let saved=localStorage.getItem('amarAdminPass')||'7424'; if(p===saved){ localStorage.setItem('amarAdminLogged','yes'); let l=document.getElementById('adminLogin'); if(l) l.style.display='none'; loadUsers(); } else { let e=document.getElementById('adminErr'); if(e) e.innerText='ভুল পাসওয়ার্ড! ডিফল্ট: 7424'; } };
+window.adminLogout=()=>{ localStorage.removeItem('amarAdminLogged'); location.reload(); };
+window.__adminReady=true;
+window.toggleMore=(e)=>{ if(e) e.stopPropagation(); let m=document.getElementById('moreMenu'); if(!m) return; m.style.display=m.style.display==='flex'?'none':'flex'; };
+window.closeMore=()=>{ let m=document.getElementById('moreMenu'); if(m) m.style.display='none'; };
+document.addEventListener('click',e=>{ let m=document.getElementById('moreMenu'); if(m && m.style.display==='flex' && !e.target.closest('#moreMenu') && !e.target.closest('#topBtns')) m.style.display='none'; });
+window.toggleDark=()=>{ document.body.classList.toggle('dark'); localStorage.setItem('amarAdminDark',document.body.classList.contains('dark')?'yes':'no'); };
+window.openTheme=()=>{ let m=document.getElementById('themeModal'); if(m) m.style.display='flex'; }
+window.closeTheme=()=>{ let m=document.getElementById('themeModal'); if(m) m.style.display='none'; }
+window.setWall=(n)=>{ localStorage.setItem('amarAdminWall',n); closeTheme(); }
+window.toggleExtra=()=>{ let e=document.getElementById('extraBar'); if(e) e.style.display=e.style.display==='flex'?'none':'flex'; }
+window.sendLocation=async()=>{ if(!currentChatId) return alert('আগে ইউজার সিলেক্ট করো'); navigator.geolocation.getCurrentPosition(async pos=>{ let url='https://www.google.com/maps?q='+pos.coords.latitude+','+pos.coords.longitude; await push(ref(db,'adminChats/'+currentChatId+'/messages'),{sender:'Admin',senderPhone:'admin',text:'📍 আমার লোকেশন: '+url,type:'location',time:Date.now(),seen:false}); }); }
+window.sendFile=async(e)=>{ if(!currentChatId) return alert('আগে ইউজার সিলেক্ট করো'); let f=e.target.files[0]; if(!f) return; let r=new FileReader(); r.onload=async()=>{ await push(ref(db,'adminChats/'+currentChatId+'/messages'),{sender:'Admin',senderPhone:'admin',text:r.result,type:'file',fileName:f.name,time:Date.now(),seen:false}); }; r.readAsDataURL(f); e.target.value=''; }
+window.askAI=async()=>{ if(!currentChatId) return alert('আগে ইউজার সিলেক্ট করো'); let q=prompt('🤖 AI দিয়ে কি রিপ্লাই পাঠাবা?'); if(!q) return; let ans='তোমার মেসেজটা পাইছি! Admin একটু পরে রিপ্লাই দিবে ✨'; await push(ref(db,'adminChats/'+currentChatId+'/messages'),{sender:'AI 🤖',senderPhone:'ai',text:ans,type:'text',time:Date.now(),seen:true}); }
+window.starMsg=()=>{ closeMsgMenu(); if(!starredIds.includes(selectedMsgKey)){ starredIds.push(selectedMsgKey); localStorage.setItem('amarAdminStar',JSON.stringify(starredIds)); alert('⭐ Save হইছে!'); } }
+window.openStar=()=>{ let m=document.getElementById('starModal'); if(m) m.style.display='flex'; let list=document.getElementById('starList'); if(!list) return; list.innerHTML=''; if(starredIds.length===0) list.innerHTML='<div style="text-align:center;color:#999;padding:20px">কোনো Star নাই</div>'; Object.entries(allMsgs).forEach(([k,mm])=>{ if(starredIds.includes(k)) list.innerHTML+=`<div class="msg other" style="max-width:100%">⭐ <b>${mm.sender}</b><br>${mm.type==='text'?mm.text:'📷/🎤'}</div>`; }); }
+window.closeStar=()=>{ let m=document.getElementById('starModal'); if(m) m.style.display='none'; }
+window.openPoll=()=>{ let m=document.getElementById('pollModal'); if(m) m.style.display='flex'; }
+window.closePoll=()=>{ let m=document.getElementById('pollModal'); if(m) m.style.display='none'; }
+window.createPoll=async()=>{ let q=document.getElementById('pollQ')?.value.trim()||'', o1=document.getElementById('pollOpt1')?.value.trim()||'', o2=document.getElementById('pollOpt2')?.value.trim()||''; if(!q||!o1||!o2) return alert('প্রশ্ন + ২টা অপশন দাও'); await push(ref(db,'groupChats/main/messages'),{sender:'Admin',senderPhone:'admin',type:'poll',pollQ:q,options:[{text:o1,votes:0},{text:o2,votes:0}],time:Date.now()}); closePoll(); alert('✅ Poll গ্রুপে গেছে!'); openGroup(); }
+window.votePoll=async(k,idx)=>{ let snap=await get(ref(db,'groupChats/main/messages/'+k)); let d=snap.val(); if(!d) return; if(d.votedBy && d.votedBy['Admin']) return alert('আগেই ভোট দিছো!'); d.options[idx].votes++; if(!d.votedBy) d.votedBy={}; d.votedBy['Admin']=true; await set(ref(db,'groupChats/main/messages/'+k),d); }
+window.startGroupCall=async()=>{ alert('📞 গ্রুপ ভয়েস কলে জয়েন হইছো!'); try{ localStream=await navigator.mediaDevices.getUserMedia({audio:true}); let cs=document.getElementById('callScreen'); if(cs) cs.style.display='flex'; let ci=document.getElementById('callInfo'); if(ci) ci.innerText='📞 গ্রুপ ভয়েস কল চলছে...'; }catch(e){ alert('মাইক পারমিশন দাও'); } }
+window.toggleSearch=()=>{ let s=document.getElementById('searchBar'); if(!s) return; let show=s.style.display!=='flex'; s.style.display=show?'flex':'none'; if(show){ let inp=document.getElementById('searchInput'); if(inp) inp.focus(); } else { let inp=document.getElementById('searchInput'); if(inp) inp.value=''; doSearch(); } }
+window.doSearch=()=>{ let q=document.getElementById('searchInput')?.value.toLowerCase().trim()||''; document.querySelectorAll('#msgs .msg').forEach(el=>{ if(!q){ el.style.display='block'; el.style.opacity='1'; return; } let txt=(el.innerText||'').toLowerCase(); el.style.opacity=txt.includes(q)?'1':'0.2'; }); }
+window.openStatus=()=>{ let m=document.getElementById('statusModal'); if(m) m.style.display='flex'; loadStatus(); }
+window.closeStatus=()=>{ let m=document.getElementById('statusModal'); if(m) m.style.display='none'; }
+function loadStatus(){ onValue(ref(db,'status'),snap=>{ let list=document.getElementById('statusList'); if(!list) return; list.innerHTML=''; let d=snap.val()||{}; let arr=Object.entries(d).filter(([k,v])=> Date.now()-v.time < 24*60*60*1000).sort((a,b)=>b[1].time-a[1].time); if(arr.length===0) list.innerHTML='<div style="text-align:center;color:#999;padding:20px">কোনো স্ট্যাটাস নাই</div>'; arr.forEach(([k,v])=>{ list.innerHTML+=`<div class="statusItem"><img src="${v.photo||'https://ui-avatars.com/api/?name='+v.sender}"><div><b>${v.sender}</b><br><span style="font-size:13px">${v.text}</span></div></div>`; }); }); }
+window.postStatus=async()=>{ let t=document.getElementById('statusInput')?.value.trim()||''; if(!t) return alert('স্ট্যাটাস লিখো'); await push(ref(db,'status'),{sender:'Admin',senderPhone:'admin',photo:'',text:t,time:Date.now(),likes:0}); let inp=document.getElementById('statusInput'); if(inp) inp.value=''; alert('✅ স্ট্যাটাস পোস্ট হইছে!'); }
+window.openGroup=()=>{ let m=document.getElementById('groupModal'); if(m) m.style.display='flex'; loadGroup(); }
+window.closeGroup=()=>{ let m=document.getElementById('groupModal'); if(m) m.style.display='none'; }
+function loadGroup(){ onValue(ref(db,'groupChats/main/messages'),snap=>{ let box=document.getElementById('groupMsgs'); if(!box) return; box.innerHTML=''; let d=snap.val()||{}; Object.entries(d).forEach(([k,m])=>{ let isMine=m.sender==='Admin'; let content=''; if(m.type==='poll'){ content=`<div class="pollBox"><b>📊 ${m.pollQ}</b>${m.options.map((o,i)=>`<div class="opt" onclick="votePoll('${k}',${i})"><span>${o.text}</span><b>${o.votes} ভোট</b></div>`).join('')}</div>`; } else if(m.type==='voice') content=`<audio controls src="${m.text}"></audio>`; else if(m.type==='image') content=`<img src="${m.text}" style="max-width:100%;border-radius:10px">`; else if(m.type==='viewOnce') content=`<div style="background:#111;color:white;padding:15px;border-radius:10px;text-align:center">👻 View Once ছবি</div>`; else if(m.type==='location') content=`<a href="${m.text.split(': ')[1]}" target="_blank">📍 লোকেশন</a>`; else if(m.type==='file') content=`<a href="${m.text}" download="${m.fileName}">📁 ${m.fileName||'ফাইল'}</a>`; else content=m.text; box.innerHTML+=`<div class="msg ${isMine?'me':'other'}"><b style="font-size:11px">${isMine?'তুমি (Admin)':m.sender}</b><br><div>${content}</div></div>`; }); box.scrollTop=box.scrollHeight; }); }
+window.sendGroup=async()=>{ let i=document.getElementById('groupInput'); let t=i?.value.trim()||''; if(!t) return; await push(ref(db,'groupChats/main/messages'),{sender:'Admin',senderPhone:'admin',text:t,type:'text',time:Date.now()}); if(i) i.value=''; }
+window.openUUChats=()=>{ let m=document.getElementById('uuModal'); if(m) m.style.display='flex'; let um=document.getElementById('uuMsgs'); if(um) um.style.display='none'; onValue(ref(db,'userChats'),snap=>{ let list=document.getElementById('uuList'); if(!list) return; list.innerHTML=''; let d=snap.val()||{}; let arr=Object.entries(d); if(arr.length===0) list.innerHTML='<div style="text-align:center;color:#999;padding:20px">কোনো User-User চ্যাট নাই</div>'; arr.forEach(([chatKey,chatObj])=>{ let msgs=chatObj.messages||{}; let count=Object.keys(msgs).length; let lastMsg=Object.values(msgs).pop(); let lastTxt=lastMsg? (lastMsg.type==='text'?lastMsg.text:(lastMsg.type==='image'?'📷 ছবি':lastMsg.type==='viewOnce'?'👻 View Once':'🎤 ভয়েস')) : ''; let parts=chatKey.split('_'); list.innerHTML+=`<div class="uuItem" onclick="openUUChat('${chatKey}')"><b>💬 ${parts[0]} ↔ ${parts[1]}</b><span style="font-size:13px;color:#555">${count} মেসেজ • ${lastTxt}</span></div>`; }); }); };
+window.closeUUChats=()=>{ let m=document.getElementById('uuModal'); if(m) m.style.display='none'; };
+window.backToUUList=()=>{ let um=document.getElementById('uuMsgs'); if(um) um.style.display='none'; let ul=document.getElementById('uuList'); if(ul) ul.style.display='flex'; };
+window.openUUChat=(chatKey)=>{ let ul=document.getElementById('uuList'); if(ul) ul.style.display='none'; let box=document.getElementById('uuMsgs'); if(!box) return; box.style.display='flex'; onValue(ref(db,'userChats/'+chatKey+'/messages'),snap=>{ box.innerHTML=''; let d=snap.val()||{}; Object.entries(d).forEach(([k,m])=>{ let content=m.type==='image'?`<img src="${m.text}" style="max-width:100%;border-radius:10px">`:m.type==='viewOnce'?`<div style="background:#111;color:white;padding:12px;border-radius:10px">👻 View Once - Admin দেখতে পারবে</div>`:m.type==='voice'?`<audio controls src="${m.text}"></audio>`:m.text; box.innerHTML+=`<div class="msg other" style="max-width:95%"><b>${m.sender} 📱 ${m.senderPhone||''}</b><div>${content}</div></div>`; }); box.scrollTop=box.scrollHeight; }); };
+window.openReports=()=>{ let m=document.getElementById('reportModal'); if(m) m.style.display='flex'; onValue(ref(db,'reports'),snap=>{ let list=document.getElementById('reportList'); if(!list) return; list.innerHTML=''; let d=snap.val()||{}; if(Object.keys(d).length===0) list.innerHTML='<div style="text-align:center;color:#999;padding:20px">কোনো Report নাই ✅</div>'; Object.entries(d).forEach(([k,r])=>{ list.innerHTML+=`<div class="reportItem"><b>🚨 ${r.reporterName} (${r.reporterPhone})</b><br><span style="font-size:13px">রিপোর্ট করছে <b>${r.reportedSender}</b> কে</span><br><span style="font-size:13px">কারণ: ${r.reason}</span><br><span style="font-size:13px">মেসেজ: ${r.reportedText||''}</span><br><button style="background:#ff9800;color:white" onclick="warnUserByPhone('${r.reportedSender}','${r.reportedText}')">⚠️ Warn করো</button><button style="background:#25d366;color:white" onclick="resolveReport('${k}')">✅ Solved</button><button style="background:#ff5252;color:white" onclick="deleteReport('${k}')">🗑️ Delete</button></div>`; }); }); };
+window.closeReports=()=>{ let m=document.getElementById('reportModal'); if(m) m.style.display='none'; };
+window.resolveReport=async(k)=>{ await remove(ref(db,'reports/'+k)); alert('✅ Report Solved!'); };
+window.deleteReport=async(k)=>{ await remove(ref(db,'reports/'+k)); };
+window.warnUserByPhone=async(name,txt)=>{ let phone=prompt('কোন নাম্বারকে Warn করবা? - 017XXXXXXXX', ''); if(!phone) return; let p=cleanPhone(phone); let snap=await get(ref(db,'warns/'+makeUID(p))); let cur=snap.val()||{count:0}; await set(ref(db,'warns/'+makeUID(p)),{count:cur.count+1,lastReason:'Admin Warn: '+txt,time:Date.now()}); alert('⚠️ '+name+' কে Warn পাঠানো হইছে!'); };
+window.warnCurrentUser=async()=>{ if(!currentPhone) return alert('আগে ইউজার সিলেক্ট করো'); let snap=await get(ref(db,'warns/'+makeUID(currentPhone))); let cur=snap.val()||{count:0}; await set(ref(db,'warns/'+makeUID(currentPhone)),{count:cur.count+1,lastReason:'Admin Warn করছে',time:Date.now()}); alert('⚠️ '+currentUser+' কে Warn পাঠানো হইছে!'); };
+window.warnSelectedUser=async()=>{ if(!selectedPhoneForMenu) return alert('নাম্বার নাই'); let snap=await get(ref(db,'warns/'+makeUID(selectedPhoneForMenu))); let cur=snap.val()||{count:0}; await set(ref(db,'warns/'+makeUID(selectedPhoneForMenu)),{count:cur.count+1,lastReason:'Admin Warn',time:Date.now()}); closeUserMenu(); alert('⚠️ Warn পাঠানো হইছে!'); };
+window.openBroadcast=()=>{ let m=document.getElementById('broadcastModal'); if(m) m.style.display='flex'; }
+window.closeBroadcast=()=>{ let m=document.getElementById('broadcastModal'); if(m) m.style.display='none'; }
+window.sendBroadcast=async()=>{
+  let t=document.getElementById('broadcastText')?.value.trim()||'';
+  if(!t) return alert('আগে মেসেজ লিখো');
+  if(!confirm('এই মেসেজটা কি সব '+Object.keys(usersData).length+' জন ইউজারকে পাঠাবা?')) return;
+  await push(ref(db,'groupChats/main/messages'),{sender:'Admin',senderPhone:'admin',text:'📢 Admin Announcement:\n'+t,type:'text',time:Date.now()});
+  for(let [uid,u] of Object.entries(usersData)){
+    if(uid==='admin' || !u.name) continue;
+    let cid=getAdminChatId(u.name, u.phone);
+    await push(ref(db,'adminChats/'+cid+'/messages'),{sender:'Admin',senderPhone:'admin',text:'📢 Admin Announcement:\n'+t,type:'text',time:Date.now(),seen:false});
+  }
+  await push(ref(db,'broadcasts'),{text:t,time:Date.now(),from:'Admin'});
+  document.getElementById('broadcastText').value='';
+  closeBroadcast();
+  alert('✅ সবাইকে মেসেজ পাঠানো হইছে!');
+}
+window.openUpdate=()=>{ let m=document.getElementById('updateModal'); if(m) m.style.display='flex'; };
+window.closeUpdate=()=>{ let m=document.getElementById('updateModal'); if(m) m.style.display='none'; };
+window.sendUpdate=async()=>{ let v=document.getElementById('updateVerInput')?.value.trim()||''; let n=document.getElementById('updateNoteInput')?.value.trim()||''; if(!v) return alert('ভার্সন দাও - যেমন 4'); await set(ref(db,'appConfig/version'),{version:v,note:n||'নতুন ফিচার যোগ হইছে!'}); closeUpdate(); alert('✅ আপডেট সবাইকে পাঠানো হইছে!'); };
+window.openForward=()=>{ closeMsgMenu(); let p=document.getElementById('forwardPreview'); if(p) p.innerText=selectedMsgType==='text'?selectedMsgText:'📷/🎤'; let sel=document.getElementById('forwardUserSelect'); if(sel){ sel.innerHTML=''; Object.values(usersData).forEach(u=>{ if(u.name) sel.innerHTML+=`<option value="${u.name}">${u.name} ${u.phone?'('+u.phone+')':''}</option>`; }); } let m=document.getElementById('forwardBox'); if(m) m.style.display='flex'; }
+window.closeForward=()=>{ let m=document.getElementById('forwardBox'); if(m) m.style.display='none'; }
+window.doForwardGroup=async()=>{ closeForward(); await push(ref(db,'groupChats/main/messages'),{sender:'Admin',senderPhone:'admin',text:selectedMsgText,type:selectedMsgType,time:Date.now(),forwarded:true}); alert('✅ গ্রুপে Forward হইছে!'); openGroup(); }
+window.doForwardUser=async()=>{ let targetName=document.getElementById('forwardUserSelect')?.value||''; if(!targetName) return alert('ইউজার সিলেক্ট করো'); closeForward(); let targetUser=Object.values(usersData).find(u=>u.name===targetName); let targetChat=targetUser? getAdminChatId(targetUser.name, targetUser.phone) : 'admin_u_'+targetName.toLowerCase().replace(/[^a-z0-9]/g,'_'); await push(ref(db,'adminChats/'+targetChat+'/messages'),{sender:'Admin',senderPhone:'admin',text:selectedMsgText,type:selectedMsgType,time:Date.now(),seen:false,forwarded:true}); alert('✅ '+targetName+' কে Forward হইছে!'); }
+if(localStorage.getItem('amarAdminLogged')==='yes') loadUsers();
+function loadUsers(){
+  onValue(ref(db,'blockedUsers'),snap=>{ blockedMap=snap.val()||{}; let bc=document.getElementById('blockedCount'); if(bc) bc.innerText=Object.keys(blockedMap).length; renderUserList(allUsersArr); });
+  onValue(ref(db,'mutedUsers'),snap=>{ mutedMap=snap.val()||{}; });
+  onValue(ref(db,'onlineUsers'), snap=>{
+    let d=snap.val()||{}; usersData=d;
+    let arr=Object.entries(d).sort((a,b)=> (b[1].last||0)-(a[1].last||0));
+    allUsersArr=arr;
+    let uc=document.getElementById('userCount'); if(uc) uc.innerText=arr.filter(([uid])=>uid!=='admin').length;
+    let oc=document.getElementById('onlineCount'); if(oc) oc.innerText=arr.filter(([uid,u])=>uid!=='admin' && Date.now()-u.last<15000).length;
+    renderUserList(arr);
+    arr.forEach(([uid,u])=>{ if(uid==='admin') return; let cid=getAdminChatId(u.name, u.phone); listenForCallsForUser(cid, u.name); });
+  });
+}
+function renderUserList(arr){
+  let list=document.getElementById('list'); if(!list) return; list.innerHTML='';
+  let q=(document.getElementById('userSearch')?.value||'').toLowerCase().trim();
+  let filtered=arr.filter(([uid,u])=>{ if(uid==='admin') return false; if(!q) return true; return (u.name||'').toLowerCase().includes(q) || (u.phone||'').includes(q); });
+  if(filtered.length===0) list.innerHTML='<div style="padding:20px;color:#999;text-align:center">কেউ পাওয়া যায় নাই</div>';
+  filtered.forEach(([uid,u])=>{
+    let div=document.createElement('div'); div.className='userItem'+(currentUser===u.name?' active':'')+(blockedMap[uid]?' blocked':'');
+    div.onclick=()=>openChat(u.name, uid, u.phone);
+    div.oncontextmenu=e=>{ e.preventDefault(); openUserMenu(u.name,uid,u.phone); return false; };
+    let img=u.photo||`https://ui-avatars.com/api/?name=${u.name}&background=ff6d00&color=fff`;
+    let isOnline = Date.now()-u.last<15000;
+    let onlineTxt = isOnline ? '🟢 Online' : '🕒 '+new Date(u.last).toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit'});
+    let badge = blockedMap[uid] ? '🚫 ' : (mutedMap[uid] ? '🔕 ' : '');
+    let phoneTxt = u.phone ? '📱 '+u.phone+' • ' : '';
+    div.innerHTML=`<div class="avatar"><img src="${img}">${isOnline?'<span class="dot"></span>':''}</div><div class="info"><b>${badge}${u.name}</b><span>${phoneTxt}${u.lastMsg||''}</span></div><span style="font-size:11px;color:#999;white-space:nowrap">${onlineTxt}</span>`;
+    list.appendChild(div);
+  });
+}
+window.filterUsers=()=>{ renderUserList(allUsersArr); };
+window.openUserMenu=(name,uid,phone)=>{ selectedUserForMenu=name; selectedUidForMenu=uid; selectedPhoneForMenu=phone||null; let nm=document.getElementById('userMenuName'); if(nm) nm.innerText=name+(phone?' 📱 '+phone:''); let mu=document.getElementById('muteUserBtn'); if(mu) mu.innerText=mutedMap[uid]?'🔔 Unmute':'🔕 Mute'; let bu=document.getElementById('blockUserBtn'); if(bu) bu.innerText=blockedMap[uid]?'✅ Unblock':'🚫 Block'; let m=document.getElementById('userMenu'); if(m) m.style.display='flex'; }
+window.closeUserMenu=()=>{ let m=document.getElementById('userMenu'); if(m) m.style.display='none'; }
+window.openUserFromMenu=()=>{ closeUserMenu(); openChat(selectedUserForMenu, selectedUidForMenu, selectedPhoneForMenu); }
+window.toggleMuteUser=async()=>{ if(mutedMap[selectedUidForMenu]) await remove(ref(db,'mutedUsers/'+selectedUidForMenu)); else await set(ref(db,'mutedUsers/'+selectedUidForMenu),{name:selectedUserForMenu,phone:selectedPhoneForMenu||'',time:Date.now()}); closeUserMenu(); }
+window.toggleBlockUser=async()=>{ if(blockedMap[selectedUidForMenu]){ if(confirm(selectedUserForMenu+' কে Unblock করবা?')) await remove(ref(db,'blockedUsers/'+selectedUidForMenu)); } else { if(confirm(selectedUserForMenu+' কে Block করবা?')) await set(ref(db,'blockedUsers/'+selectedUidForMenu),{name:selectedUserForMenu,phone:selectedPhoneForMenu||'',time:Date.now()}); } closeUserMenu(); }
+function openChat(name, uid, phone){
+  currentUser=name; currentUid=uid; currentPhone=phone||null;
+  currentChatId=getAdminChatId(name, phone);
+  let ca=document.getElementById('chatArea'); if(ca) ca.style.display='flex'; let em=document.getElementById('empty'); if(em) em.style.display='none';
+  let cn=document.getElementById('chatUserName'); if(cn) cn.innerText=name+(phone?' 📱 '+phone:'');
+  let u=usersData[uid]; if(u && u.photo){ let ci=document.getElementById('chatUserImg'); if(ci) ci.src=u.photo; }
+  if(u){ let cs=document.getElementById('chatUserStatus'); if(cs) cs.innerText = (Date.now()-u.last<15000 ? '🟢 Online' : '🕒 Last seen '+new Date(u.last).toLocaleTimeString('bn-BD',{hour:'2-digit',minute:'2-digit'})) + (phone?' • 📱 '+phone:''); }
+  if(window.innerWidth<700){ let ul=document.getElementById('userList'); if(ul) ul.classList.add('hideOnMobile'); if(ca) ca.classList.add('showOnMobile'); }
+  set(ref(db,'onlineUsers/admin'),{name:'Admin',photo:'',last:Date.now(),lastMsg:'Online'});
+  onValue(ref(db,'adminChats/'+currentChatId+'/messages'), snap=>{
+    let box=document.getElementById('msgs'); if(!box) return; box.innerHTML=''; let d=snap.val(); allMsgs=d||{};
+    if(d) Object.entries(d).forEach(([key,m])=>{
+      if(m.sender!=='Admin' && m.sender!=='AI 🤖' && !m.seen){ update(ref(db,'adminChats/'+currentChatId+'/messages/'+key),{seen:true}); }
+      let html='';
+      if(m.type==='image') html=`<img src="${m.text}" onclick="event.stopPropagation();openImg(this.src)">`;
+      else if(m.type==='viewOnce') html=`<div style="background:#111;color:white;padding:12px;border-radius:10px">👻 View Once ছবি - Admin দেখতে পারবে</div>`;
+      else if(m.type==='voice') html=`<audio controls src="${m.text}"></audio><div style="font-size:11px">🎤 ভয়েস</div>`;
+      else if(m.type==='location') html=`<a href="${m.text.split(': ')[1]}" target="_blank" style="color:#e65100;font-weight:bold">📍 লোকেশন দেখো</a><br><span style="font-size:12px">${m.text}</span>`;
+      else if(m.type==='file') html=`<a href="${m.text}" download="${m.fileName}" style="color:#e65100;font-weight:bold">📁 ${m.fileName||'ফাইল'}</a>`;
+      else if(m.type==='poll') html=`<div class="pollBox"><b>📊 ${m.pollQ}</b></div>`;
+      else html=(m.forwarded?'<div style="font-size:11px;color:#888">📩 Forwarded</div>':'')+m.text+(m.edited?' <span style="font-size:10px;color:#888">(edited)</span>':'');
+      let isMine=m.sender==='Admin';
+      let quoteHtml=m.replyTo?`<div class="quote"><b>${m.replyTo.sender}</b><span>${m.replyTo.text}</span></div>`:'';
+      let ticks=isMine?`<span class="ticks ${m.seen?'seen':''}">✓✓</span>`:'';
+      let reactHtml=m.reaction?`<span class="react">${m.reaction}</span>`:'';
+      box.innerHTML+=`<div class="msg ${isMine?'me mine':'other'} ${m.pinned?'pinned':''}" data-key="${key}" data-text="${m.type==='text'?encodeURIComponent(m.text):''}" data-type="${m.type}">${quoteHtml}<b style="font-size:11px">${isMine?'তুমি (Admin)':m.sender+' • '+(m.senderPhone||'')}</b><div>${html}</div>${ticks}${reactHtml}${m.disappearing?'<span style="font-size:10px"> ⏳ 24h</span>':''}</div>`;
+    });
+    box.scrollTop=box.scrollHeight; bindLongPress(); updatePinBar();
+  });
+  onValue(ref(db,'adminChats/'+currentChatId+'/pinned'),snap=>{ let p=snap.val(); pinnedKey=p?p.key:null; updatePinBar(); });
+  listenTyping();
+}
+function updatePinBar(){ let bar=document.getElementById('pinBar'); if(!bar) return; if(pinnedKey && allMsgs[pinnedKey]){ let m=allMsgs[pinnedKey]; bar.style.display='flex'; let pt=document.getElementById('pinText'); if(pt) pt.innerText = m.type==='text'?m.text:(m.type==='image'?'📷 ছবি':'🎤 ভয়েস'); } else bar.style.display='none'; }
+window.scrollToPin=()=>{ if(!pinnedKey) return; let el=document.querySelector(`[data-key="${pinnedKey}"]`); if(el) el.scrollIntoView({behavior:'smooth',block:'center'}); }
+window.unpinMsg=async()=>{ await remove(ref(db,'adminChats/'+currentChatId+'/pinned')); }
+window.pinMsg=async()=>{ closeMsgMenu(); await set(ref(db,'adminChats/'+currentChatId+'/pinned'),{key:selectedMsgKey,time:Date.now()}); }
+let typingTimer=null;
+window.onTyping=()=>{ if(!currentChatId) return; set(ref(db,'typing/'+currentChatId+'/admin'),{typing:true,time:Date.now()}); clearTimeout(typingTimer); typingTimer=setTimeout(()=>{ set(ref(db,'typing/'+currentChatId+'/admin'),{typing:false,time:Date.now()}); },2000); }
+function listenTyping(){ onValue(ref(db,'typing/'+currentChatId),snap=>{ let d=snap.val()||{}; let t=false; Object.entries(d).forEach(([k,v])=>{ if(k!=='admin' && v.typing && Date.now()-v.time<3000) t=true; }); let st=document.getElementById('chatUserStatus'); if(!st) return; if(t) st.innerText='✍️ '+currentUser+' লিখতেছে...'; else st.innerText='🟢 Online'+(currentPhone?' • 📱 '+currentPhone:''); }); setInterval(()=>{ set(ref(db,'onlineUsers/admin'),{name:'Admin',photo:'',last:Date.now(),lastMsg:'Online'}); },10000); }
+window.goBack=()=>{ let ca=document.getElementById('chatArea'); if(ca){ ca.style.display='none'; ca.classList.remove('showOnMobile'); } let ul=document.getElementById('userList'); if(ul) ul.classList.remove('hideOnMobile'); let em=document.getElementById('empty'); if(em && window.innerWidth>700) em.style.display='flex'; }
+window.send=async()=>{ if(!currentChatId) return alert('আগে ইউজার সিলেক্ট করো'); let i=document.getElementById('inp'), t=i?.value.trim()||''; if(!t) return; let data={sender:'Admin',senderPhone:'admin',text:t,type:'text',time:Date.now(),seen:false}; if(replyTo) data.replyTo=replyTo; await push(ref(db,'adminChats/'+currentChatId+'/messages'),data); cancelReply(); if(i) i.value=''; }
+window.sendImage=(e)=>{ if(!currentChatId) return alert('আগে ইউজার সিলেক্ট করো'); let f=e.target.files[0]; if(!f) return; let r=new FileReader(); r.onload=ev=>{ let img=new Image(); img.onload=()=>{ let c=document.createElement('canvas'); let s=Math.min(1,600/img.width); c.width=img.width*s; c.height=img.height*s; c.getContext('2d').drawImage(img,0,0,c.width,c.height); let compressed=c.toDataURL('image/jpeg',0.6); push(ref(db,'adminChats/'+currentChatId+'/messages'),{sender:'Admin',senderPhone:'admin',text:compressed,type:'image',time:Date.now(),seen:false}); }; img.src=ev.target.result; }; r.readAsDataURL(f); e.target.value=''; }
+window.toggleVoice=async()=>{ if(!currentChatId) return alert('আগে ইউজার সিলেক্ট করো'); let btn=document.getElementById('voiceBtn'); if(!isRecording){ try{ let stream=await navigator.mediaDevices.getUserMedia({audio:true}); mediaRecorder=new MediaRecorder(stream); audioChunks=[]; isRecording=true; if(btn) btn.innerText='⏹️'; mediaRecorder.ondataavailable=e=>{ if(e.data.size>0) audioChunks.push(e.data) }; mediaRecorder.onstop=async()=>{ let blob=new Blob(audioChunks,{type:'audio/webm'}); let reader=new FileReader(); reader.onload=async()=>{ await push(ref(db,'adminChats/'+currentChatId+'/messages'),{sender:'Admin',senderPhone:'admin',text:reader.result,type:'voice',time:Date.now(),seen:false}); }; reader.readAsDataURL(blob); stream.getTracks().forEach(t=>t.stop()); }; mediaRecorder.start(); }catch(e){ alert('মাইক পারমিশন দাও'); } } else { isRecording=false; if(btn) btn.innerText='🎤'; mediaRecorder.stop(); } }
+let listenedCalls=new Set();
+function listenForCallsForUser(chatId, userName){ if(listenedCalls.has(chatId)) return; listenedCalls.add(chatId); onValue(ref(db,'calls/'+chatId), snap=>{ let d=snap.val(); if(!d) return; if(d.type==='offer' && (d.to==='Admin' || d.to==='admin')){ incomingOffer=d; incomingChatId=chatId; let cn=document.getElementById('callerName'); if(cn) cn.innerText=(d.fromName||userName)+(d.from?' 📱 '+d.from:''); let ct=document.getElementById('callerType'); if(ct) ct.innerText=d.isVideo?'📹 ভিডিও কল আসছে...':'📞 অডিও কল আসছে...'; let ic=document.getElementById('incomingCall'); if(ic) ic.style.display='block'; } if(d.type==='end'){ let ic=document.getElementById('incomingCall'); if(ic) ic.style.display='none'; if(pc) endCall(); } }); }
+window.startCall=async(isVideo)=>{ if(!currentChatId) return alert('আগে ইউজার সিলেক্ট করো'); isVideoCall=isVideo; let cs=document.getElementById('callScreen'); if(cs) cs.style.display='flex'; let ci=document.getElementById('callInfo'); if(ci) ci.innerText=isVideo?`📹 ${currentUser} এর সাথে ভিডিও কল...`:`📞 ${currentUser} এর সাথে অডিও কল...`; try{ localStream=await navigator.mediaDevices.getUserMedia({audio:true, video:isVideo}); let lv=document.getElementById('localVideo'); if(lv) lv.srcObject=localStream; pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]}); localStream.getTracks().forEach(t=>pc.addTrack(t,localStream)); pc.ontrack=e=>{ let rv=document.getElementById('remoteVideo'); if(rv) rv.srcObject=e.streams[0]; }; pc.onicecandidate=e=>{ if(e.candidate) push(ref(db,'calls/'+currentChatId+'/candidates'),{candidate:JSON.stringify(e.candidate), from:'Admin'}); }; let offer=await pc.createOffer(); await pc.setLocalDescription(offer); await set(ref(db,'calls/'+currentChatId),{type:'offer', offer:JSON.stringify(offer), from:'Admin', fromName:'Admin', to:currentPhone||currentUser, isVideo:isVideo, time:Date.now()}); onValue(ref(db,'calls/'+currentChatId), async snap=>{ let d=snap.val(); if(d && d.type==='answer'){ try{ await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(d.answer))); }catch(e){} } }); onChildAdded(ref(db,'calls/'+currentChatId+'/candidates'), snap=>{ let c=snap.val(); if(c.from!=='Admin'){ try{ pc.addIceCandidate(new RTCIceCandidate(JSON.parse(c.candidate))); }catch(e){} } }); }catch(e){ alert('পারমিশন দাও'); endCall(); } }
+window.acceptCall=async()=>{ let ic=document.getElementById('incomingCall'); if(ic) ic.style.display='none'; if(!incomingOffer) return; isVideoCall=incomingOffer.isVideo; currentChatId=incomingChatId; let uname=incomingOffer.fromName||incomingOffer.from||'User'; currentUser=uname; currentPhone=incomingOffer.from && /^01/.test(incomingOffer.from) ? incomingOffer.from : null; let ca=document.getElementById('chatArea'); if(ca) ca.style.display='flex'; let em=document.getElementById('empty'); if(em) em.style.display='none'; let cn=document.getElementById('chatUserName'); if(cn) cn.innerText=uname+(currentPhone?' 📱 '+currentPhone:''); let cs=document.getElementById('callScreen'); if(cs) cs.style.display='flex'; let ci=document.getElementById('callInfo'); if(ci) ci.innerText='📞 কল চলছে...'; try{ localStream=await navigator.mediaDevices.getUserMedia({audio:true, video:isVideoCall}); let lv=document.getElementById('localVideo'); if(lv) lv.srcObject=localStream; pc=new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]}); localStream.getTracks().forEach(t=>pc.addTrack(t,localStream)); pc.ontrack=e=>{ let rv=document.getElementById('remoteVideo'); if(rv) rv.srcObject=e.streams[0]; }; pc.onicecandidate=e=>{ if(e.candidate) push(ref(db,'calls/'+currentChatId+'/candidates'),{candidate:JSON.stringify(e.candidate), from:'Admin'}); }; await pc.setRemoteDescription(new RTCSessionDescription(JSON.parse(incomingOffer.offer))); let answer=await pc.createAnswer(); await pc.setLocalDescription(answer); await set(ref(db,'calls/'+currentChatId),{type:'answer', answer:JSON.stringify(answer), from:'Admin', to:uname, isVideo:isVideoCall}); }catch(e){ alert('পারমিশন দাও'); endCall(); } }
+window.rejectCall=async()=>{ let ic=document.getElementById('incomingCall'); if(ic) ic.style.display='none'; if(incomingChatId) await set(ref(db,'calls/'+incomingChatId),{type:'end', from:'Admin'}); }
+window.endCall=async()=>{ let cs=document.getElementById('callScreen'); if(cs) cs.style.display='none'; let ic=document.getElementById('incomingCall'); if(ic) ic.style.display='none'; if(pc){ pc.close(); pc=null; } if(localStream){ localStream.getTracks().forEach(t=>t.stop()); localStream=null; } if(currentChatId){ try{ await set(ref(db,'calls/'+currentChatId),{type:'end', from:'Admin'}); await remove(ref(db,'calls/'+currentChatId+'/candidates')); }catch(e){} } }
+window.toggleMute=()=>{ if(!localStream) return; isMuted=!isMuted; localStream.getAudioTracks().forEach(t=>t.enabled=!isMuted); }
+window.toggleCam=()=>{ if(!localStream) return; isCamOff=!isCamOff; localStream.getVideoTracks().forEach(t=>t.enabled=!isCamOff); }
+document.getElementById('inp')?.addEventListener('keypress',e=>{if(e.key==='Enter')send()});
+document.getElementById('adminPass')?.addEventListener('keypress',e=>{if(e.key==='Enter')adminLogin()});
+let selectedMsgKey=null, selectedMsgText='', selectedMsgType='text', selectedMsgSender='', selectedMsgIsMine=false, pressTimer=null;
+let replyTo=null;
+function bindLongPress(){ document.querySelectorAll('#msgs .msg').forEach(el=>{ el.oncontextmenu=e=>{e.preventDefault();openMsgMenu(el);return false;}; el.addEventListener('touchstart',()=>{pressTimer=setTimeout(()=>openMsgMenu(el),500)},{passive:true}); el.addEventListener('touchend',()=>clearTimeout(pressTimer)); }); }
+function openMsgMenu(el){ selectedMsgKey=el.dataset.key; selectedMsgText=decodeURIComponent(el.dataset.text||''); selectedMsgType=el.dataset.type; selectedMsgIsMine=el.classList.contains('mine'); selectedMsgSender=el.querySelector('b')?el.querySelector('b').innerText:''; let mp=document.getElementById('menuPreview'); if(mp) mp.innerText=selectedMsgType==='text'?selectedMsgText:'📷/🎤'; let eb=document.getElementById('editBtn'); if(eb) eb.style.display=(selectedMsgIsMine && selectedMsgType==='text')?'block':'none'; let db=document.getElementById('deleteBtn'); if(db) db.style.display=selectedMsgIsMine?'block':'none'; let mm=document.getElementById('msgMenu'); if(mm) mm.style.display='flex'; }
+window.closeMsgMenu=()=>{let m=document.getElementById('msgMenu'); if(m) m.style.display='none';}
+window.startEditMsg=()=>{closeMsgMenu();let ei=document.getElementById('editInput'); if(ei) ei.value=selectedMsgText;let eb=document.getElementById('editBox'); if(eb) eb.style.display='flex';}
+window.closeEditBox=()=>{let m=document.getElementById('editBox'); if(m) m.style.display='none';}
+window.saveEditMsg=async()=>{let t=document.getElementById('editInput')?.value.trim()||'';if(!t)return;await set(ref(db,'adminChats/'+currentChatId+'/messages/'+selectedMsgKey),{sender:'Admin',senderPhone:'admin',text:t,type:'text',time:Date.now(),edited:true});closeEditBox();}
+window.deleteMsg=async()=>{if(!confirm('এই মেসেজটা সবার জন্য ডিলিট করবা?'))return;await remove(ref(db,'adminChats/'+currentChatId+'/messages/'+selectedMsgKey));closeMsgMenu();}
+window.startReplyMsg=()=>{ closeMsgMenu(); let txt=selectedMsgType==='text'?selectedMsgText:'📷/🎤'; replyTo={sender:selectedMsgSender, text:txt, type:selectedMsgType}; let rn=document.getElementById('replyToName'); if(rn) rn.innerText='↩️ '+selectedMsgSender+' কে Reply'; let rt=document.getElementById('replyToText'); if(rt) rt.innerText=txt; let rb=document.getElementById('replyBar'); if(rb) rb.style.display='flex'; let inp=document.getElementById('inp'); if(inp) inp.focus(); }
+window.cancelReply=()=>{ replyTo=null; let rb=document.getElementById('replyBar'); if(rb) rb.style.display='none'; }
+window.sendReaction=async(emoji)=>{ closeMsgMenu(); await update(ref(db,'adminChats/'+currentChatId+'/messages/'+selectedMsgKey),{reaction:emoji}); }
+let currentViewImg='';
+window.openImg=(src)=>{ currentViewImg=src; let vi=document.getElementById('viewerImg'); if(vi) vi.src=src; let iv=document.getElementById('imgViewer'); if(iv) iv.style.display='flex'; }
+window.closeImg=()=>{let iv=document.getElementById('imgViewer'); if(iv) iv.style.display='none';}
+window.downloadImg=async()=>{ try{ let a=document.createElement('a'); a.href=currentViewImg; a.download='AmarChat-'+Date.now()+'.jpg'; document.body.appendChild(a); a.click(); a.remove(); }catch(e){ window.open(currentViewImg,'_blank'); } }
+async function setupAdminPush(){ try{ const messaging = getMessaging(app); let perm = await Notification.requestPermission(); if(perm !== 'granted') return; const token = await getToken(messaging, { vapidKey: 'BDJYjqwE9K-6ekVpZAJrQpBUKnAGZi27iYtoZ_JC9sHxWf-fZwPmMHUB4J9Ig-N6tf2S2zAYtX9fy7jz4Py_GW8' }); if(token){ await set(ref(db, 'fcmTokens/admin'), { token: token, name: 'Admin' }); } onMessage(messaging, (payload)=>{ try{ new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3').play(); }catch(e){} }); }catch(e){ console.log('Admin FCM Error', e); } }
+setupAdminPush();
+</script>
+<script>
+if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/firebase-messaging-sw.js').then(()=> console.log('✅ Admin SW Ready')).catch(e=> console.log('SW Fail', e)); }
+document.getElementById('adminLoginBtn')?.addEventListener('click',()=>{ if(!window.__adminReady && window.adminLoginFallback) window.adminLoginFallback(); });
+setTimeout(()=>{ if(!window.__adminReady){ let b=document.getElementById('adminLoginBtn'); if(b) b.onclick=window.adminLoginFallback; } },3000);
+</script>
+</body>
+</html>
